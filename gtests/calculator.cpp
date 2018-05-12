@@ -24,7 +24,7 @@ TEST(Calculator, literal) {
 TEST(Calculator, multicalls) {
     Calculator c;
     for (int i = 0; i < 1000; ++i) {
-        EXPECT_EQ(c.process("174234"), "134234");
+        EXPECT_EQ(c.process("174234"), "174234");
         EXPECT_EQ(c.process("1"), "1");
         EXPECT_EQ(c.process("7"), "7");
         EXPECT_EQ(c.process("-7"), "-7");

@@ -1,7 +1,7 @@
 #include <sstream>
 #include <string>
 
-template<typename TUnit=unsigned long>
+template<typename TUnit=signed long>
 class TCalculator {
 public:
     std::string process(const std::string& line);
