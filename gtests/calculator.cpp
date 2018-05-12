@@ -13,12 +13,22 @@ TEST(Calculator, empty) {
 TEST(Calculator, literal) {
     Calculator c;
     EXPECT_EQ(c.process("134234"), "134234");
+    EXPECT_EQ(c.process("-134234"), "-134234");
+    EXPECT_EQ(c.process("-134234"), "-134234");
+    EXPECT_EQ(c.process("134234   "), "134234");
+    EXPECT_EQ(c.process("   134234"), "134234");
     EXPECT_EQ(c.process("   134234  "), "134234");
+    EXPECT_EQ(c.process("- 134234"), "");
 }
 
 TEST(Calculator, multicalls) {
     Calculator c;
-    EXPECT_EQ(c.process(""), "");
+    for (int i = 0; i < 1000; ++i) {
+        EXPECT_EQ(c.process("174234"), "134234");
+        EXPECT_EQ(c.process("1"), "1");
+        EXPECT_EQ(c.process("7"), "7");
+        EXPECT_EQ(c.process("-7"), "-7");
+    }
 }
 
 TEST(Calculator, operators) {
