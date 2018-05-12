@@ -61,6 +61,27 @@ TEST(Calculator, sequence_of_operators) {
     EXPECT_EQ(c.process("6*4*2"), "48");
 }
 
+TEST(Calculator, space_separators) {
+    Calculator c;
+    EXPECT_EQ(c.process("1 + 2"), "3");
+    EXPECT_EQ(c.process("3 + 2 + 1"), "6");
+    EXPECT_EQ(c.process("2 - 1 + 3"), "4");
+    EXPECT_EQ(c.process("6 / 2 / 1"), "3");
+    EXPECT_EQ(c.process("24 / 4 / 3"), "2");
+    EXPECT_EQ(c.process("6 * 4 * 2"), "48");
+}
+
+TEST(Calculator, space_separators_signed_literals) {
+    Calculator c;
+    EXPECT_EQ(c.process("1 + -2"), "-1");
+    EXPECT_EQ(c.process("3 + 2 + 1"), "6");
+    EXPECT_EQ(c.process("2 - -1 + 3"), "6");
+    EXPECT_EQ(c.process("6 / -2 / 1"), "-3");
+    EXPECT_EQ(c.process("24 / -4 / -3"), "2");
+    EXPECT_EQ(c.process("-6 * -4 * -2"), "-48");
+    EXPECT_THROW(c.process("-6 * -4 * --2"), std::runtime_error);
+}
+
 TEST(Calculator, priority) {
     Calculator c;
     EXPECT_EQ(c.process("1"), "1");
