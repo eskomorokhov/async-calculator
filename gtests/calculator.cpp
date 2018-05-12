@@ -34,10 +34,21 @@ TEST(Calculator, multicalls) {
 TEST(Calculator, operators) {
     Calculator c;
     EXPECT_EQ(c.process("1+2"), "3");
+    EXPECT_EQ(c.process("3+2"), "5");
     EXPECT_EQ(c.process("2-1"), "1");
     EXPECT_EQ(c.process("6/2"), "3");
     EXPECT_EQ(c.process("6/4"), "1");
     EXPECT_EQ(c.process("6*4"), "24");
+}
+
+TEST(Calculator, operators_with_signed_literals) {
+    Calculator c;
+    EXPECT_EQ(c.process("1+-2"), "-1");
+    EXPECT_EQ(c.process("3+-2"), "1");
+    EXPECT_EQ(c.process("2-+1"), "1");
+    EXPECT_EQ(c.process("6/-2"), "-3");
+    EXPECT_EQ(c.process("6/-4"), "-1");
+    EXPECT_EQ(c.process("6*-4"), "-24");
 }
 
 TEST(Calculator, priority) {
