@@ -18,12 +18,12 @@ TEST(Calculator, literal) {
     EXPECT_EQ(c.process("134234   "), "134234");
     EXPECT_EQ(c.process("   134234"), "134234");
     EXPECT_EQ(c.process("   134234  "), "134234");
-    EXPECT_THROW(c.process("- 134234"), std::runtime_error);
+    EXPECT_THROW(c.process("-- 134234"), std::runtime_error);
 }
 
 TEST(Calculator, multicalls) {
     Calculator c;
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 100; ++i) {
         EXPECT_EQ(c.process("174234"), "174234");
         EXPECT_EQ(c.process("1"), "1");
         EXPECT_EQ(c.process("7"), "7");
@@ -84,15 +84,15 @@ TEST(Calculator, space_separators_signed_literals) {
 
 TEST(Calculator, priority) {
     Calculator c;
-    EXPECT_EQ(c.process("1*2/3"), "5");
+    EXPECT_EQ(c.process("15*2/3"), "10");
     EXPECT_EQ(c.process("1*2+3"), "5");
-    EXPECT_EQ(c.process("1*2-1"), "5");
-    EXPECT_EQ(c.process("4/2*2"), "1");
+    EXPECT_EQ(c.process("3*2-1"), "5");
+    EXPECT_EQ(c.process("4/2*2"), "4");
     EXPECT_EQ(c.process("4/2/2"), "1");
     EXPECT_EQ(c.process("4/2+2"), "4");
     EXPECT_EQ(c.process("4/2-2"), "0");
     EXPECT_EQ(c.process("4+2*2"), "8");
-    EXPECT_EQ(c.process("4+2/2"), "3");
+    EXPECT_EQ(c.process("4+2/2"), "5");
     EXPECT_EQ(c.process("4+2-2"), "4");
 }
 
