@@ -10,9 +10,10 @@ TEST(Calculator, empty) {
 }
 
 
-TEST(Calculator, literals) {
+TEST(Calculator, literal) {
     Calculator c;
-    EXPECT_EQ(c.process(""), "");
+    EXPECT_EQ(c.process("134234"), "134234");
+    EXPECT_EQ(c.process("   134234  "), "134234");
 }
 
 TEST(Calculator, multicalls) {
