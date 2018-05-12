@@ -84,7 +84,16 @@ TEST(Calculator, space_separators_signed_literals) {
 
 TEST(Calculator, priority) {
     Calculator c;
-    EXPECT_EQ(c.process("1"), "1");
+    EXPECT_EQ(c.process("1*2/3"), "5");
+    EXPECT_EQ(c.process("1*2+3"), "5");
+    EXPECT_EQ(c.process("1*2-1"), "5");
+    EXPECT_EQ(c.process("4/2*2"), "1");
+    EXPECT_EQ(c.process("4/2/2"), "1");
+    EXPECT_EQ(c.process("4/2+2"), "4");
+    EXPECT_EQ(c.process("4/2-2"), "0");
+    EXPECT_EQ(c.process("4+2*2"), "8");
+    EXPECT_EQ(c.process("4+2/2"), "3");
+    EXPECT_EQ(c.process("4+2-2"), "4");
 }
 
 TEST(Calculator, parentheses) {
