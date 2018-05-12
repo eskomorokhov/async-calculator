@@ -6,7 +6,7 @@
 
 TEST(Calculator, empty) {
     Calculator c;
-    EXPECT_EQ(c.process(""), "");
+    EXPECT_THROW(c.process(""), std::runtime_error);
 }
 
 
@@ -18,7 +18,7 @@ TEST(Calculator, literal) {
     EXPECT_EQ(c.process("134234   "), "134234");
     EXPECT_EQ(c.process("   134234"), "134234");
     EXPECT_EQ(c.process("   134234  "), "134234");
-    EXPECT_EQ(c.process("- 134234"), "");
+    EXPECT_THROW(c.process("- 134234"), std::runtime_error);
 }
 
 TEST(Calculator, multicalls) {
@@ -33,25 +33,25 @@ TEST(Calculator, multicalls) {
 
 TEST(Calculator, operators) {
     Calculator c;
-    EXPECT_EQ(c.process(""), "");
+    EXPECT_EQ(c.process("1"), "1");
 }
 
 TEST(Calculator, priority) {
     Calculator c;
-    EXPECT_EQ(c.process(""), "");
+    EXPECT_EQ(c.process("1"), "1");
 }
 
 TEST(Calculator, parentheses) {
     Calculator c;
-    EXPECT_EQ(c.process(""), "");
+    EXPECT_EQ(c.process("1"), "1");
 }
 
 TEST(Calculator, random_evaluations) {
     Calculator c;
-    EXPECT_EQ(c.process(""), "");
+    EXPECT_EQ(c.process("1"), "1");
 }
 
 TEST(Calculator, overflowing) {
     Calculator c;
-    EXPECT_EQ(c.process(""), "");
+    EXPECT_EQ(c.process("1"), "1");
 }
