@@ -51,6 +51,16 @@ TEST(Calculator, operators_with_signed_literals) {
     EXPECT_EQ(c.process("6*-4"), "-24");
 }
 
+TEST(Calculator, sequence_of_operators) {
+    Calculator c;
+    EXPECT_EQ(c.process("1+2+3"), "6");
+    EXPECT_EQ(c.process("3+2+1"), "6");
+    EXPECT_EQ(c.process("2-1+3"), "4");
+    EXPECT_EQ(c.process("6/2/1"), "3");
+    EXPECT_EQ(c.process("24/4/3"), "2");
+    EXPECT_EQ(c.process("6*4*2"), "48");
+}
+
 TEST(Calculator, priority) {
     Calculator c;
     EXPECT_EQ(c.process("1"), "1");
