@@ -1,3 +1,4 @@
+#pragma once
 #include <sstream>
 #include <string>
 #include <stdexcept>
@@ -6,6 +7,9 @@
 #include <cstdio>
 #include <iostream>
 #include <cstring>
+
+
+#include <shunting_yard_calc.hpp>
 
 namespace {
  void close_pipe(std::FILE* fp) { pclose(fp); }
@@ -41,7 +45,12 @@ namespace {
      }
      return true;
  }
-}
+ inline bool calc_len(const std::string&expression, std::string& outcome) {
+     outcome = std::to_string(expression.size());
+     return true;
+ }
+
+}   //  noname namespace
 
 template<typename TUnit=signed long>
 class TCalculator {
@@ -52,7 +61,9 @@ public:
 template<typename TUnit>
 std::string TCalculator<TUnit>::process(const std::string &line) const {
     std::string out;
-    if (calc_using_system(line, out)) {
+    //if (calc_using_system(line, out)) {
+    //if (calc_len(line, out)) {
+    if (shunting_yard_calc(line, out)) {
         return out;
     } else {
         throw std::runtime_error("Cannot parse string " + line);
