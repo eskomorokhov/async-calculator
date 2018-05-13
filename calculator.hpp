@@ -13,15 +13,14 @@ namespace {
      if (expression.empty()) {
          return false;
      }
-     const auto buf_max = 1024*1024;
-     char buf[buf_max];
 
+     const auto buf_max = 1024;
+     char buf[buf_max];
      std::string cmd = "echo '";
      cmd += expression;
      cmd += "' | bc -q 2>&1 ";
      std::unique_ptr<std::FILE, decltype(&close_pipe)> fp(popen(cmd.c_str(), "r"), &close_pipe);
      if (!fp) {
-         std::cout << "nullptr\n";
          return false;
      }
 
@@ -47,11 +46,11 @@ namespace {
 template<typename TUnit=signed long>
 class TCalculator {
 public:
-    std::string process(const std::string& line);
+    std::string process(const std::string& line) const;
 };
 
 template<typename TUnit>
-std::string TCalculator<TUnit>::process(const std::string &line) {
+std::string TCalculator<TUnit>::process(const std::string &line) const {
     std::string out;
     if (calc_using_system(line, out)) {
         return out;
