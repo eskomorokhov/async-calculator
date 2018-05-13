@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 
+template<typename TUnit=long>
 inline bool shunting_yard_calc(const std::string& expression, std::string& outcome) {
     static const std::map<char, int> operators_precedence = {{'*', 10}, {'/', 10}, {'+', 8}, {'-', 9}, {'n',11}};
     std::stack<char> ops;
@@ -79,19 +80,19 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
                 auto &a = *it_literal;
                 ++it_literal;
                 auto &b = *it_literal;
-                int res = 0;
+                TUnit res = 0;
                 switch ((*it)[0]) {
                     case '+':
-                        res = atoi(a.c_str()) + atoi(b.c_str());
+                        res = atol(a.c_str()) + atol(b.c_str());
                         break;
                     case '-':
-                        res = atoi(a.c_str()) - atoi(b.c_str());
+                        res = atol(a.c_str()) - atol(b.c_str());
                         break;
                     case '*':
-                        res = atoi(a.c_str()) * atoi(b.c_str());
+                        res = atol(a.c_str()) * atol(b.c_str());
                         break;
                     case '/':
-                        res = atoi(a.c_str()) / atoi(b.c_str());
+                        res = atol(a.c_str()) / atol(b.c_str());
                         break;
                 };
                 *it = std::to_string(res);
