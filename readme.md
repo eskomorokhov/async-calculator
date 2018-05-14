@@ -50,6 +50,9 @@ $ ./generate-expression 1000000000 > expression_bench.txt
 $ nc 127.0.0.1 9090 < expression_bench.txt
 ```
 
+## TODO
+ * HotSpot profiling
+ * Memory profiling
 
 
 
