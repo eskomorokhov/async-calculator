@@ -7,7 +7,7 @@
 
 template<typename TUnit=long>
 inline bool shunting_yard_calc(const std::string& expression, std::string& outcome) {
-    std::cerr<< "exp:" << expression << "\n";
+    //std::cerr<< "exp:" << expression << "\n";
     static const std::map<char, int> operators_precedence = {{'*', 10}, {'/', 10}, {'+', 8}, {'-', 9}, {'n',11}, {'(',1}, {')',1}};
     std::stack<char> ops;
     std::list<std::string> rpn;
@@ -59,8 +59,8 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
                     --p;
                 }
             }
-            std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
-            std::cerr << "->";
+            //std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
+            //std::cerr << "->";
         }
     }
     if (ops.empty() && rpn.empty()) {
@@ -72,8 +72,8 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
         rpn.push_back(op);
         ops.pop();
     }
-    std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
-    std::cerr << ":";
+    //std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
+    //std::cerr << ":";
 
     for (auto it = rpn.begin()++; it != rpn.end(); ++it) {
         if (std::isdigit((*it)[0])) {
