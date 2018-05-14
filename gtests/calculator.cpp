@@ -109,6 +109,10 @@ TEST(Calculator, parentheses) {
     EXPECT_EQ(c.process("2 * (3 + 2*(5+2))"), "34");
 }
 
+TEST(Calculator, long_expressions) {
+    Calculator c;
+    EXPECT_EQ(c.process("1+6807+5248+1272+8930+1272+7544+878+7923+7709+4440+8165+4492+3042+7987+2503+2327+1729+8840+2612+4303+3169+7709+7157+9560+933+3099+278+1816+5335+9097+7826+3511+3"), "157517");
+}
 TEST(Calculator, random_evaluations) {
     Calculator c;
     EXPECT_EQ(c.process("1"), "1");

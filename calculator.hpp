@@ -1,56 +1,8 @@
 #pragma once
-#include <sstream>
 #include <string>
 #include <stdexcept>
 
-#include <cstdlib>
-#include <cstdio>
-#include <iostream>
-#include <cstring>
-
-
-#include <shunting_yard_calc.hpp>
-
-namespace {
- void close_pipe(std::FILE* fp) { pclose(fp); }
- inline bool calc_using_system(const std::string& expression, std::string& outcome) {
-     if (expression.empty()) {
-         return false;
-     }
-
-     const auto buf_max = 1024;
-     char buf[buf_max];
-     std::string cmd = "echo '";
-     cmd += expression;
-     cmd += "' | bc -q 2>&1 ";
-     std::unique_ptr<std::FILE, decltype(&close_pipe)> fp(popen(cmd.c_str(), "r"), &close_pipe);
-     if (!fp) {
-         return false;
-     }
-
-     bool first = true;
-     while (std::fgets(buf, sizeof buf, fp.get()) != NULL) {
-         if (first) {
-             first = false;
-         } else {
-             outcome += "\n";
-         }
-         outcome += buf;
-     }
-     if (outcome.back() == '\n') {
-         outcome.pop_back();
-     }
-     if (std::strstr(outcome.c_str(), "error") != nullptr) {
-         return false;
-     }
-     return true;
- }
- inline bool calc_len(const std::string&expression, std::string& outcome) {
-     outcome = std::to_string(expression.size());
-     return true;
- }
-
-}   //  noname namespace
+#include "shunting_yard_calc.hpp"
 
 template<typename TUnit=signed long>
 class TCalculator {
@@ -61,8 +13,6 @@ public:
 template<typename TUnit>
 std::string TCalculator<TUnit>::process(const std::string &line) const {
     std::string out;
-    //if (calc_using_system(line, out)) {
-    //if (calc_len(line, out)) {
     if (shunting_yard_calc(line, out)) {
         return out;
     } else {

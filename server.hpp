@@ -40,6 +40,7 @@ public:
 
     void start()
     {
+        std::cerr << "start retreiving data at " << std::time(0) << "\n";
         socket_.async_read_some(boost::asio::buffer(buffer_),
                                         boost::bind(&TCPConnection::handle_read, shared_from_this(),
                                                     boost::asio::placeholders::error,
@@ -57,50 +58,61 @@ private:
             , processor_(processor) {
     }
 
-    void handle_write(std::shared_ptr<std::string>& message_ptr) {
-        std::cout << "written " << *message_ptr << "\n";
+    void handle_write(const std::shared_ptr<std::string>& /*message_ptr*/) {
+        //std::cout << "written " << *message_ptr << "\n";
     }
 
     void handle_read(const boost::system::error_code& e, const std::size_t bytes_transferred) {
-        //std::cerr << "Got msg sz: " << bytes_transferred << "\n";
-        if (!e)
-        {
-            //std::copy(buffer_.begin(), buffer_.begin() + bytes_transferred, std::ostream_iterator<char>(std::cout));
-            // read data and put output
+        //std::cerr << "Got msg sz: " << bytes_transferred << "msg:" << std::string(buffer_.begin(), buffer_.begin() + bytes_transferred) << "\n";
+        if (!e || e == boost::asio::error::eof) {
+            std::vector<std::string> reqs;
             long long enter_character_ind = -1;
-            for (long i = 0; i < static_cast<long>(bytes_transferred); ++i) {
-                if (buffer_[i] == '\n') {
+            long i = 0;
+            while (i < static_cast<long>(bytes_transferred)) {
+                if (buffer_[i] == '\n' || buffer_[i] == '\r') {
+                    if (enter_character_ind + 1 != i || enter_character_ind == -1) {
+                        reqs.emplace_back(std::string(&buffer_[enter_character_ind + 1], &buffer_[i]));
+                    }
                     enter_character_ind = i;
+                } else if (!std::isprint(buffer_[i])) {
+                    std::cerr << "Error non printable character code " << int(buffer_[i]) << "\n";
+                    return;
                 }
+                ++i;
             }
-            if (enter_character_ind >= 0 ) {
-                std::string exp = std::move(expression_);
-                std::copy(buffer_.begin(), buffer_.begin() + enter_character_ind, std::back_inserter(exp));
-                process(std::move(exp));
+            if (e == boost::asio::error::eof) {
+                reqs.emplace_back(std::string(buffer_.begin() + (enter_character_ind + 1), buffer_.begin() + bytes_transferred));
+                enter_character_ind = bytes_transferred - 1;
             }
-            std::copy(buffer_.begin() + enter_character_ind + 1, buffer_.begin() + bytes_transferred, std::back_inserter(expression_));
-
-            socket_.async_read_some(boost::asio::buffer(buffer_),
-                                    boost::bind(&TCPConnection::handle_read, shared_from_this(),
-                                                boost::asio::placeholders::error,
-                                                boost::asio::placeholders::bytes_transferred));
-
-        } else if(e == boost::asio::error::eof) {
-            process(std::move(expression_));
+            if (!reqs.empty()) {
+                expression_ += reqs[0];
+                reqs[0] = std::move(expression_);
+            }
+            std::copy(buffer_.begin() + (enter_character_ind + 1), buffer_.begin() + bytes_transferred,
+                      std::back_inserter(expression_));
+            //std::cerr << "exp_rest:" << expression_ << "\n";
+            process(std::move(reqs), e == boost::asio::error::eof);
         } else {
             std::cerr << "error: "<< e.message() << "\n";
         }
         // destroy object at the end
     }
-    void process(std::string message) {
-        // call processing and read some
-        //auto this_ptr = shared_from_this();
-        workers_.enqueue([](const pointer& this_ptr, const std::string& message) {
-            sleep(1);
-            std::shared_ptr<std::string> res = std::make_shared<std::string>(this_ptr->processor_(message));
-            boost::asio::async_write(this_ptr->socket_, boost::asio::buffer(*res),
-                                     boost::bind(&TCPConnection::handle_write, this_ptr, res));
-        }, shared_from_this(), std::move(message));
+
+    void process(std::vector<std::string>&& vec_messages, bool stop = false) {
+        workers_.enqueue([stop](const pointer& this_ptr, const std::vector<std::string>& vec_messages) {
+            for (const auto& message: vec_messages) {
+                std::shared_ptr<std::string> res = std::make_shared<std::string>(this_ptr->processor_(message) + "\n");
+                boost::asio::async_write(this_ptr->socket_, boost::asio::buffer(*res),
+                                         boost::bind(&TCPConnection::handle_write, this_ptr, res));
+            }
+            if (stop) {
+                return;
+            }
+            this_ptr->socket_.async_read_some(boost::asio::buffer(this_ptr->buffer_),
+                                              boost::bind(&TCPConnection::handle_read, this_ptr,
+                                                          boost::asio::placeholders::error,
+                                                          boost::asio::placeholders::bytes_transferred));
+        }, shared_from_this(), std::move(vec_messages));
     }
 
     boost::asio::ip::tcp::socket socket_;

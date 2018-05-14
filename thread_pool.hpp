@@ -86,7 +86,7 @@ auto ThreadPool::enqueue(F&& f, Args&&... args) -> std::future<typename std::res
     if (stop_) {
         throw std::runtime_error("enqueue on stopped ThreadPool");
     }
-    tasks_.push([task](){ (*task)(); std::cerr << "finished task\n";});
+    tasks_.push([task](){ (*task)();});
     return std::move(res);
 }
 
