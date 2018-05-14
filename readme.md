@@ -34,7 +34,7 @@ brew install --HEAD https://gist.githubusercontent.com/Kronuz/96ac10fbd8472eb1e7
 brew install boost
 ```
 
-## Running
+## Running 
 ```sh
 $ ./net-calc 127.0.0.1 9090
 ```
@@ -46,7 +46,6 @@ $ echo "(3+ 2*4) * 7" | nc 127.0.0.1 9090
 
 ## Benchmarking
 ```sh
-# can take minutes to generate 1Gb data
 $ ./generate-expression 1000000000 > expression_bench.txt
 $ nc 127.0.0.1 9090 < expression_bench.txt
 ```
