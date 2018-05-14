@@ -7,7 +7,8 @@
 
 template<typename TUnit=long>
 inline bool shunting_yard_calc(const std::string& expression, std::string& outcome) {
-    static const std::map<char, int> operators_precedence = {{'*', 10}, {'/', 10}, {'+', 8}, {'-', 9}, {'n',11}};
+    std::cerr<< "exp:" << expression << "\n";
+    static const std::map<char, int> operators_precedence = {{'*', 10}, {'/', 10}, {'+', 8}, {'-', 9}, {'n',11}, {'(',1}, {')',1}};
     std::stack<char> ops;
     std::list<std::string> rpn;
     const char* p = expression.c_str();
@@ -26,11 +27,26 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
             prev_op = false;
         } else if (std::isspace(*p)){
             //skip
+
+        } else if (*p == '(') {
+            ops.push(*p);
+            prev_op = false;
+        } else if (*p == ')') {
+            while (!ops.empty() && ops.top() != '(') {
+                std::string op;
+                op += ops.top();
+                ops.pop();
+                rpn.push_back(op);
+            }
+            if (!ops.empty() && ops.top() == '(') {
+                ops.pop();
+            }
         } else {
             auto cmd = *p;
-            if(prev_op && cmd == '-') {
+            if (prev_op && cmd == '-') {
                 cmd = 'n';
             }
+
             {
                 if (ops.empty() || operators_precedence.at(ops.top()) < operators_precedence.at(cmd)) {
                     ops.push(cmd);
@@ -43,8 +59,8 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
                     --p;
                 }
             }
-            //std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
-            //std::cerr << "->";
+            std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
+            std::cerr << "->";
         }
     }
     if (ops.empty() && rpn.empty()) {
@@ -56,8 +72,8 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
         rpn.push_back(op);
         ops.pop();
     }
-    //std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
-    //std::cerr << ":";
+    std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
+    std::cerr << ":";
 
     for (auto it = rpn.begin()++; it != rpn.end(); ++it) {
         if (std::isdigit((*it)[0])) {

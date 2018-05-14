@@ -100,7 +100,13 @@ TEST(Calculator, priority) {
 
 TEST(Calculator, parentheses) {
     Calculator c;
-    EXPECT_EQ(c.process("1"), "1");
+    EXPECT_EQ(c.process("1 - 3 - 2"), "-4");
+    EXPECT_EQ(c.process("1 - (3 - 2)"), "0");
+    EXPECT_EQ(c.process("2 * 3 + 2"), "8");
+    EXPECT_EQ(c.process("2 * (3 + 2)"), "10");
+    EXPECT_EQ(c.process("2 * (3 + 2*5)"), "26");
+    EXPECT_EQ(c.process("2 * (3 + 2*5+2)"), "30");
+    EXPECT_EQ(c.process("2 * (3 + 2*(5+2))"), "34");
 }
 
 TEST(Calculator, random_evaluations) {
