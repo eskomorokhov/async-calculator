@@ -74,10 +74,12 @@ private:
                         reqs.emplace_back(std::string(&buffer_[enter_character_ind + 1], &buffer_[i]));
                     }
                     enter_character_ind = i;
-                } else if (!std::isprint(buffer_[i])) {
-                    std::cerr << "Error non printable character code " << int(buffer_[i]) << "\n";
-                    return;
                 }
+                // ignore due to performance issues
+                //else if (!std::isprint(buffer_[i])) {
+                //    std::cerr << "Error non printable character code " << int(buffer_[i]) << "\n";
+                //    return;
+                //}
                 ++i;
             }
             if (e == boost::asio::error::eof) {

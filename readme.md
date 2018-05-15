@@ -50,9 +50,32 @@ $ ./generate-expression 1000000000 > expression_bench.txt
 $ nc 127.0.0.1 9090 < expression_bench.txt
 ```
 
-## TODO
- * HotSpot profiling
- * Memory profiling
+
+## Profiling
+
+### HotSpots
+Using valgrind callgrind, valgrind generates report, 
+```sh
+$ sudo apt-get install valgrind
+$ valgrind --tool=callgrind  --dump-instr=yes --dump-line=yes --collect-jumps=yes build/net-calc 127.0.0.1 9090
+# sudo apt-get install qcachegrind
+$ qcachegrind 
+```
+![callgrind graph](./callgrind.png "Most of time in copying std::string during shunting_yard loop, sample task 1 Mb")
+
+### Memory
+Using valgrind massif
+```sh
+$ sudo apt-get install valgrind
+$ valgrind --tool=massif build/net-calc 127.0.0.1 9090
+# sudo apt-get install massif-visualizer
+# sudo add-apt-repository ppa:kubuntu-ppa/backports 
+# sudo apt-get update
+# sudo apt-get install massif-visualizer
+$ massif-visualizer
+```
+![massif visualizer graph](./massif.png "Memory used for operations containter and result vector containers, samle task 1Mb")
+
 
 
 
