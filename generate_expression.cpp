@@ -15,7 +15,7 @@ int main(int argc, const char*argv[]) {
     unsigned avg_len_number = len_number /2 ? len_number/2: 1;
     int commands_needed = size / (avg_len_number + 1);
     std::cout << 1;
-    char ops[] = {'+','-','*','/'};
+    char ops[] = {'+','-','*' };
     for (int i = 0; i < commands_needed; ++i) {
         
         std::cout << ops[rand()%sizeof ops] << rand() % max_int;

@@ -47,6 +47,7 @@ $ echo "(3+ 2*4) * 7" | nc 127.0.0.1 9090
 ## Benchmarking
 ```sh
 $ ./generate-expression 1000000000 > expression_bench.txt
+#some versions of nc doesn't send EOF
 $ nc 127.0.0.1 9090 < expression_bench.txt
 ```
 
@@ -76,7 +77,12 @@ $ massif-visualizer
 ```
 ![massif visualizer graph](./massif.png "Memory used for operations containter and result vector containers, samle task 1Mb")
 
-
+## TODO
+ * Check overflow values
+ * support brackets in generate test expression tool
+ * check devision by zero
+ * extend errors descriptions
+ * fix using memory
 
 
 

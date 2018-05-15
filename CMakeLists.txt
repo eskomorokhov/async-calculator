@@ -7,7 +7,7 @@ include_directories(".")
 add_library(net_calc_lib STATIC
 		calculator.cpp
 		)
-
+include(/usr/src/gtest/cmake/internal_utils.cmake)
 ADD_EXECUTABLE (net-calc
 	main.cpp
 )

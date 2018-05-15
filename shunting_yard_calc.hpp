@@ -7,10 +7,18 @@
 
 template<typename TUnit=long>
 inline bool shunting_yard_calc(const std::string& expression, std::string& outcome) {
+    struct Item{
+        bool is_literal;
+        union {
+            TUnit literal;
+            char op;
+        } value;
+    };
+
     //std::cerr<< "exp:" << expression << "\n";
     static const std::map<char, int> operators_precedence = {{'*', 10}, {'/', 10}, {'+', 8}, {'-', 9}, {'n',11}, {'(',1}, {')',1}};
-    std::stack<char> ops;
-    std::list<std::string> rpn;
+    std::stack<Item> ops;
+    std::list<Item> rpn;
     const char* p = expression.c_str();
     const char* p_end = expression.c_str() + expression.size();
     bool prev_op = true;
@@ -23,22 +31,25 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
                 ++p;
             } while (std::isdigit(*p));
             --p;
-            rpn.push_back(std::to_string(v));
+            Item literal;
+            literal.is_literal = true;
+            literal.value.literal = v;
+            rpn.push_back(literal);
             prev_op = false;
         } else if (std::isspace(*p)){
             //skip
-
         } else if (*p == '(') {
-            ops.push(*p);
+            Item op_item;
+            op_item.is_literal = false;
+            op_item.value.op = *p;
+            ops.push(op_item);
             prev_op = false;
         } else if (*p == ')') {
-            while (!ops.empty() && ops.top() != '(') {
-                std::string op;
-                op += ops.top();
+            while (!ops.empty() && ops.top().value.op != '(') {
+                rpn.push_back(ops.top());
                 ops.pop();
-                rpn.push_back(op);
             }
-            if (!ops.empty() && ops.top() == '(') {
+            if (!ops.empty() && ops.top().value.op == '(') {
                 ops.pop();
             }
         } else {
@@ -48,13 +59,14 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
             }
 
             {
-                if (ops.empty() || operators_precedence.at(ops.top()) < operators_precedence.at(cmd)) {
-                    ops.push(cmd);
+                if (ops.empty() || operators_precedence.at(ops.top().value.op) < operators_precedence.at(cmd)) {
+                    Item op;
+                    op.is_literal = false;
+                    op.value.op = cmd;
+                    ops.push(op);
                     prev_op = true;
                 } else {
-                    std::string op;
-                    op += ops.top();
-                    rpn.push_back(op);
+                    rpn.push_back(ops.top());
                     ops.pop();
                     --p;
                 }
@@ -67,25 +79,26 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
         return false;
     }
     while (!ops.empty()) {
-        std::string op;
-        op += ops.top();
-        rpn.push_back(op);
+        rpn.push_back(ops.top());
         ops.pop();
     }
     //std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
     //std::cerr << ":";
 
     for (auto it = rpn.begin()++; it != rpn.end(); ++it) {
-        if (std::isdigit((*it)[0])) {
+        if (it->is_literal) {
         } else {
-            if ((*it)[0] == 'n') {
+            if (it->value.op == 'n') {
                 if (std::distance(rpn.begin(), it) < 1) {
                     return false;
                 }
                 auto it_literal = it;
                 it_literal--;
-                int res = -atoi(it_literal->c_str());
-                *it = std::to_string(res);
+                if (!it_literal->is_literal) {
+                    return false;
+                }
+                *it = *it_literal;
+                it->value.literal = -it_literal->value.literal;
                 rpn.erase(it_literal, it);
             } else {
                 if (std::distance(rpn.begin(), it) < 2) {
@@ -93,32 +106,43 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
                 }
                 auto it_literal = it;
                 std::advance(it_literal, -2);
-                auto &a = *it_literal;
+                const auto &a = *it_literal;
                 ++it_literal;
-                auto &b = *it_literal;
+                const auto &b = *it_literal;
+                if (!a.is_literal || !b.is_literal) {
+                    return false;
+                }
+                const auto& a_val = a.value.literal;
+                const auto& b_val = b.value.literal;
                 TUnit res = 0;
-                switch ((*it)[0]) {
+                switch (it->value.op) {
                     case '+':
-                        res = atol(a.c_str()) + atol(b.c_str());
+                        res = a_val + b_val;
                         break;
                     case '-':
-                        res = atol(a.c_str()) - atol(b.c_str());
+                        res = a_val - b_val;
                         break;
                     case '*':
-                        res = atol(a.c_str()) * atol(b.c_str());
+                        res = a_val * b_val;
                         break;
                     case '/':
-                        res = atol(a.c_str()) / atol(b.c_str());
+                        if (b_val == 0) {
+                            return false;
+                        }
+                        res = a_val / b_val;
                         break;
                 };
-                *it = std::to_string(res);
+                *it = a;
+                it->value.literal = res;
                 it_literal--;
                 rpn.erase(it_literal, it);
             }
         }
     }
-    outcome = rpn.front();
+    const auto& res_item = rpn.front();
+    if (!res_item.is_literal) {
+        return false;
+    }
+    outcome = std::to_string(res_item.value.literal);
     return true;
 }
-
-

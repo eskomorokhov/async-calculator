@@ -1,9 +1,32 @@
 
+#include <memory>
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <memory>
 #include <boost/array.hpp>
+
 #include "thread_pool.hpp"
+
+void log_debug() {
+//    std::cerr << "\n";
+}
+
+template <typename TArg, typename... Args> 
+void log_debug(TArg /*arg*/, Args&&... args) {
+//    std::cerr << arg;
+    log_debug(std::forward<Args>(args)...);
+}
+
+void log_info() {
+    std::cerr << "\n";
+}
+
+template <typename TArg, typename... Args> 
+void log_info(TArg arg, Args&&... args) {
+    std::cerr << arg;
+    log_info(std::forward<Args>(args)...);
+}
+
 
 template <class TProcessor>
 class StreamsProcessor {
@@ -40,7 +63,7 @@ public:
 
     void start()
     {
-        std::cerr << "start retreiving data at " << std::time(0) << "\n";
+        log_info("start retreiving data at ", std::time(0));
         socket_.async_read_some(boost::asio::buffer(buffer_),
                                         boost::bind(&TCPConnection::handle_read, shared_from_this(),
                                                     boost::asio::placeholders::error,
@@ -63,7 +86,7 @@ private:
     }
 
     void handle_read(const boost::system::error_code& e, const std::size_t bytes_transferred) {
-        //std::cerr << "Got msg sz: " << bytes_transferred << "msg:" << std::string(buffer_.begin(), buffer_.begin() + bytes_transferred) << "\n";
+        log_debug("Got msg sz: ", bytes_transferred, "msg:", std::string(buffer_.begin(), buffer_.begin() + bytes_transferred));
         if (!e || e == boost::asio::error::eof) {
             std::vector<std::string> reqs;
             long long enter_character_ind = -1;
@@ -95,7 +118,7 @@ private:
             //std::cerr << "exp_rest:" << expression_ << "\n";
             process(std::move(reqs), e == boost::asio::error::eof);
         } else {
-            std::cerr << "error: "<< e.message() << "\n";
+            log_debug("error: ", e.message());
         }
         // destroy object at the end
     }
