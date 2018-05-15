@@ -36,7 +36,7 @@ brew install boost
 
 ## Running 
 ```sh
-$ ./net-calc 127.0.0.1 9090
+$ ./net-calc 127.0.0.1 9090 2
 ```
 
 ## Using

@@ -13,7 +13,7 @@
 
 int main(int argc, const char* argv[]) {
     if (argc > 1 && argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " ip port\n";
+        std::cerr << "Usage: " << argv[0] << " ip port workers_number\n";
         return 1;
     }
     std::string ip = argc > 1 ? argv[1] : "127.0.0.1";
