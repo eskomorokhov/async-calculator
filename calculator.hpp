@@ -11,7 +11,7 @@ public:
 };
 
 template<typename TUnit>
-std::string TCalculator<TUnit>::process(const std::string &line) const {
+std::string TCalculator<TUnit>::process(const std::string& line) const {
     std::string out;
     if (shunting_yard_calc(line, out)) {
         return out;

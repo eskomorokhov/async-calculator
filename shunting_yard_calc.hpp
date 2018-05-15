@@ -17,8 +17,8 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
 
     //std::cerr<< "exp:" << expression << "\n";
     static const std::map<char, int> operators_precedence = {{'*', 10}, {'/', 10}, {'+', 8}, {'-', 9}, {'n',11}, {'(',1}, {')',1}};
-    std::stack<Item> ops;
-    std::list<Item> rpn;
+    std::deque<Item> ops;
+    std::deque<Item> rpn;
     const char* p = expression.c_str();
     const char* p_end = expression.c_str() + expression.size();
     bool prev_op = true;
@@ -42,15 +42,15 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
             Item op_item;
             op_item.is_literal = false;
             op_item.value.op = *p;
-            ops.push(op_item);
+            ops.push_back(op_item);
             prev_op = false;
         } else if (*p == ')') {
-            while (!ops.empty() && ops.top().value.op != '(') {
-                rpn.push_back(ops.top());
-                ops.pop();
+            while (!ops.empty() && ops.back().value.op != '(') {
+                rpn.push_back(ops.back());
+                ops.pop_back();
             }
-            if (!ops.empty() && ops.top().value.op == '(') {
-                ops.pop();
+            if (!ops.empty() && ops.back().value.op == '(') {
+                ops.pop_back();
             }
         } else {
             auto cmd = *p;
@@ -59,15 +59,15 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
             }
 
             {
-                if (ops.empty() || operators_precedence.at(ops.top().value.op) < operators_precedence.at(cmd)) {
+                if (ops.empty() || operators_precedence.at(ops.back().value.op) < operators_precedence.at(cmd)) {
                     Item op;
                     op.is_literal = false;
                     op.value.op = cmd;
-                    ops.push(op);
+                    ops.push_back(op);
                     prev_op = true;
                 } else {
-                    rpn.push_back(ops.top());
-                    ops.pop();
+                    rpn.push_back(ops.back());
+                    ops.pop_back();
                     --p;
                 }
             }
@@ -79,8 +79,8 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
         return false;
     }
     while (!ops.empty()) {
-        rpn.push_back(ops.top());
-        ops.pop();
+        rpn.push_back(ops.back());
+        ops.pop_back();
     }
     //std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
     //std::cerr << ":";

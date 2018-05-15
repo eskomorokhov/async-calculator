@@ -1,5 +1,9 @@
+#pragma once
+
+#include <malloc.h>
 
 #include <memory>
+#include <deque>
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -88,13 +92,13 @@ private:
     void handle_read(const boost::system::error_code& e, const std::size_t bytes_transferred) {
         log_debug("Got msg sz: ", bytes_transferred, "msg:", std::string(buffer_.begin(), buffer_.begin() + bytes_transferred));
         if (!e || e == boost::asio::error::eof) {
-            std::vector<std::string> reqs;
+            std::vector<std::deque<char> > reqs;
             long long enter_character_ind = -1;
             long i = 0;
             while (i < static_cast<long>(bytes_transferred)) {
                 if (buffer_[i] == '\n' || buffer_[i] == '\r') {
                     if (enter_character_ind + 1 != i || enter_character_ind == -1) {
-                        reqs.emplace_back(std::string(&buffer_[enter_character_ind + 1], &buffer_[i]));
+                        reqs.emplace_back(std::deque<char>(&buffer_[enter_character_ind + 1], &buffer_[i]));
                     }
                     enter_character_ind = i;
                 }
@@ -106,11 +110,11 @@ private:
                 ++i;
             }
             if (e == boost::asio::error::eof) {
-                reqs.emplace_back(std::string(buffer_.begin() + (enter_character_ind + 1), buffer_.begin() + bytes_transferred));
+                reqs.emplace_back(std::deque<char>(buffer_.begin() + (enter_character_ind + 1), buffer_.begin() + bytes_transferred));
                 enter_character_ind = bytes_transferred - 1;
             }
             if (!reqs.empty()) {
-                expression_ += reqs[0];
+                std::copy(reqs[0].begin(), reqs[0].begin() + reqs[0].size(), std::back_inserter(expression_));
                 reqs[0] = std::move(expression_);
             }
             std::copy(buffer_.begin() + (enter_character_ind + 1), buffer_.begin() + bytes_transferred,
@@ -123,10 +127,14 @@ private:
         // destroy object at the end
     }
 
-    void process(std::vector<std::string>&& vec_messages, bool stop = false) {
-        workers_.enqueue([stop](const pointer& this_ptr, const std::vector<std::string>& vec_messages) {
-            for (const auto& message: vec_messages) {
-                std::shared_ptr<std::string> res = std::make_shared<std::string>(this_ptr->processor_(message) + "\n");
+    void process(std::vector<std::deque<char> >&& vec_messages, bool stop = false) {
+        workers_.enqueue([stop](const pointer& this_ptr, std::vector<std::deque<char> > vec_messages) {
+            for (auto& message: vec_messages) {
+                std::string exp;
+                exp.append(message.begin(), message.begin() + message.size());
+                message.clear();
+                malloc_trim(0);
+                std::shared_ptr<std::string> res = std::make_shared<std::string>(this_ptr->processor_(exp) + "\n");
                 boost::asio::async_write(this_ptr->socket_, boost::asio::buffer(*res),
                                          boost::bind(&TCPConnection::handle_write, this_ptr, res));
             }
@@ -143,9 +151,9 @@ private:
     boost::asio::ip::tcp::socket socket_;
     ThreadPool& workers_;
     boost::array<char, 8192> buffer_;
-    std::string expression_;
+    std::deque<char> expression_;
     Processor& processor_;
-    std::string output_buffer_;
+    std::deque<char> output_buffer_;
 };
 
 class TCPServer
