@@ -24,8 +24,16 @@ libnet_calc_lib.a net-calc calculator_gtest generate-expression
 ```
 **linux thirdparties**
 ```sh
-sudo apt-get install libgtest-dev libboost-dev libboost-system-dev
+sudo apt-get install libgtest-dev libboost-dev libboost-system-dev cmake g++
 #sudo apt-get install netcat 
+```
+***Build gtest >= 1.8***
+```sh
+$ sudo apt-get install gtest-dev cmake
+$ cd /usr/src/gtest
+$ sudo cmake CMakeLists.txt
+$ sudo make
+$ sudo make install
 ```
 
 **mac thirdparties**
