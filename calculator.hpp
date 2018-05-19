@@ -18,13 +18,14 @@ template<typename TUnit>
 std::string TCalculator<TUnit>::process(const std::string& line) const {
     std::string outcome;
     std::string error;
-    if (shunting_yard_calc(line, outcome, error)) {
+    if(shunting_yard_calc(line, outcome, error)) {
         return outcome;
     } else {
-        throw std::runtime_error("parse error:" + error);
+        std::string error_description = "parse error: " + error;
+        return std::move(error_description);
     }
 }
 
 using Calculator=TCalculator<>;
 
-}	// namespace Application
+}   // namespace Application

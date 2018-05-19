@@ -28,7 +28,7 @@ inline bool shunting_yard_calc(
         } value;
     };
 
-    std::cerr<< "exp:" << expression << "\n";
+    //std::cerr<< "exp:" << expression << "\n";
     static const std::map<char, int> operators_precedence = {{'*', 10}, {'/', 10}, {'+', 8}, {'-', 9}, {'n',11}, {'(',1}, {')',1}};
     std::deque<Item> ops;   //! Pending queue of operations, first step of shunting-yard algorithm
     std::deque<Item> rpn;   //! Reverse polish notation https://en.wikipedia.org/wiki/Polish_notation 
@@ -116,6 +116,7 @@ inline bool shunting_yard_calc(
         return false;
     }
     if (ops.empty() && rpn.empty()) {
+        error = "no expression";
         return false;
     }
     while (!ops.empty()) {

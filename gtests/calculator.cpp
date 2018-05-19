@@ -8,7 +8,7 @@ using namespace Application;
 
 TEST(Calculator, empty) {
     Calculator c;
-    EXPECT_THROW(c.process(""), std::runtime_error);
+    EXPECT_EQ(c.process(""), "parse error: no expression");
 }
 
 TEST(Calculator, literal) {
@@ -19,7 +19,7 @@ TEST(Calculator, literal) {
     EXPECT_EQ(c.process("134234   "), "134234");
     EXPECT_EQ(c.process("   134234"), "134234");
     EXPECT_EQ(c.process("   134234  "), "134234");
-    EXPECT_THROW(c.process("-- 134234"), std::runtime_error);
+    EXPECT_EQ(c.process("-- 134234"), "parse error: missed an operand for unary operation -");
 }
 
 TEST(Calculator, multicalls) {
@@ -82,7 +82,7 @@ TEST(Calculator, space_separators_signed_literals) {
     EXPECT_EQ(c.process("24 / -4 / -3"), "2");
     EXPECT_EQ(c.process("-6 * -4 * -2"), "-48");
     // incorrect order in rpn
-    //EXPECT_THROW(c.process("-6 * -4 * --2"), std::runtime_error);
+    //EXPECT_THROW(c.process("-6 * -4 * --2"), "");
 }
 
 TEST(Calculator, priority) {
@@ -130,37 +130,37 @@ TEST(Calculator, overflowing) {
 
 TEST(Calculator, incorrect_input) {
     Calculator c;
-    EXPECT_THROW(c.process("-"), std::runtime_error);
-    EXPECT_THROW(c.process("-*"), std::runtime_error);
-    EXPECT_THROW(c.process("-/"), std::runtime_error);
-    EXPECT_THROW(c.process("-+"), std::runtime_error);
-    EXPECT_THROW(c.process("-("), std::runtime_error);
-    EXPECT_THROW(c.process("-()"), std::runtime_error);
-    EXPECT_THROW(c.process(")"), std::runtime_error);
-    EXPECT_THROW(c.process("1("), std::runtime_error);
-    EXPECT_THROW(c.process("*1"), std::runtime_error);
-    EXPECT_THROW(c.process("/1"), std::runtime_error);
-    EXPECT_THROW(c.process("+1"), std::runtime_error);
-    EXPECT_THROW(c.process("*"), std::runtime_error);
-    EXPECT_THROW(c.process("1-"), std::runtime_error);
-    EXPECT_THROW(c.process("1+"), std::runtime_error);
-    EXPECT_THROW(c.process("1*"), std::runtime_error);
-    EXPECT_THROW(c.process("1/"), std::runtime_error);
-    EXPECT_THROW(c.process("-1-"), std::runtime_error);
-    EXPECT_THROW(c.process("*1-"), std::runtime_error);
-    EXPECT_THROW(c.process("(1-2-1"), std::runtime_error);
-    EXPECT_THROW(c.process("(1-(2-1"), std::runtime_error);
-    EXPECT_THROW(c.process("((1)"), std::runtime_error);
-    EXPECT_THROW(c.process("()1"), std::runtime_error);
-    EXPECT_THROW(c.process("1(2)"), std::runtime_error);
-    EXPECT_THROW(c.process("(2)1"), std::runtime_error);
-    EXPECT_THROW(c.process("(2)1"), std::runtime_error);
-    EXPECT_THROW(c.process("(2)1"), std::runtime_error);
-    EXPECT_THROW(c.process("(2)-"), std::runtime_error);
+    EXPECT_EQ(c.process("-"), "parse error: missed an operand for unary operation -");
+    EXPECT_EQ(c.process("-*"), "parse error: an unexpected operation, missing literal or parentheses");
+    EXPECT_EQ(c.process("-/"), "parse error: an unexpected operation, missing literal or parentheses");
+    EXPECT_EQ(c.process("-+"), "parse error: an unexpected operation, missing literal or parentheses");
+    EXPECT_EQ(c.process("-("), "parse error: missing right parentheses");
+    EXPECT_EQ(c.process("-()"), "parse error: an unexpected parentheses");
+    EXPECT_EQ(c.process(")"), "parse error: an unexpected parentheses");
+    EXPECT_EQ(c.process("1("), "parse error: starts parenthesis without a conjuntion operation");
+    EXPECT_EQ(c.process("*1"), "parse error: an unexpected operation, missing literal or parentheses");
+    EXPECT_EQ(c.process("/1"), "parse error: an unexpected operation, missing literal or parentheses");
+    EXPECT_EQ(c.process("+1"), "parse error: an unexpected operation, missing literal or parentheses");
+    EXPECT_EQ(c.process("*"), "parse error: an unexpected operation, missing literal or parentheses");
+    EXPECT_EQ(c.process("1-"), "parse error: missed operand(s) for operation -");
+    EXPECT_EQ(c.process("1+"), "parse error: missed operand(s) for operation +");
+    EXPECT_EQ(c.process("1*"), "parse error: missed operand(s) for operation *");
+    EXPECT_EQ(c.process("1/"), "parse error: missed operand(s) for operation /");
+    EXPECT_EQ(c.process("-1-"), "parse error: missed operand(s) for operation -");
+    EXPECT_EQ(c.process("*1-"), "parse error: an unexpected operation, missing literal or parentheses");
+    EXPECT_EQ(c.process("(1-2-1"), "parse error: missing right parentheses");
+    EXPECT_EQ(c.process("(1-(2-1"), "parse error: missing right parentheses");
+    EXPECT_EQ(c.process("((1)"), "parse error: missing right parentheses");
+    EXPECT_EQ(c.process("()1"), "parse error: an unexpected parentheses");
+    EXPECT_EQ(c.process("1(2)"), "parse error: starts parenthesis without a conjuntion operation");
+    EXPECT_EQ(c.process("(2)1"), "parse error: an unexpected literal, missed an operation before 1");
+    EXPECT_EQ(c.process("(2)1"), "parse error: an unexpected literal, missed an operation before 1");
+    EXPECT_EQ(c.process("(2)1"), "parse error: an unexpected literal, missed an operation before 1");
+    EXPECT_EQ(c.process("(2)-"), "parse error: missed operand(s) for operation -");
 }
 
 TEST(Calculator, custom_cases) {
     Calculator c;
-    EXPECT_THROW(c.process("77*10+1*3)"), std::runtime_error);
-    EXPECT_THROW(c.process("77*10+1*3)+2"), std::runtime_error);  
+    EXPECT_EQ(c.process("77*10+1*3)"), "parse error: missing left parentheses");
+    EXPECT_EQ(c.process("77*10+1*3)+2"), "parse error: missing left parentheses");  
 }
