@@ -78,13 +78,15 @@ public:
     boost::asio::ip::tcp::socket& socket() {
         return socket_;
     }
+    virtual ~TCPConnection() {
+        log_info("Finished connection at ", std::time(0));
+    }
 private:
     TCPConnection(boost::asio::io_service& io_service, ThreadPool& workers, Processor& processor)
             : socket_(io_service)
             , workers_(workers)
             , processor_(processor) {
     }
-
     void handle_write(const std::shared_ptr<std::string>& /*message_ptr*/) {
         //std::cout << "written " << *message_ptr << "\n";
     }
@@ -120,7 +122,15 @@ private:
             std::copy(buffer_.begin() + (enter_character_ind + 1), buffer_.begin() + bytes_transferred,
                       std::back_inserter(expression_));
             //std::cerr << "exp_rest:" << expression_ << "\n";
-            process(std::move(reqs), e == boost::asio::error::eof);
+            if (e != boost::asio::error::eof) {
+                socket_.async_read_some(boost::asio::buffer(buffer_),
+                                              boost::bind(&TCPConnection::handle_read, shared_from_this(),
+                                                          boost::asio::placeholders::error,
+                                                          boost::asio::placeholders::bytes_transferred));
+            }
+            if (!reqs.empty()) {
+                process(std::move(reqs), e == boost::asio::error::eof);
+            }
         } else {
             log_debug("error: ", e.message());
         }
@@ -128,8 +138,16 @@ private:
     }
 
     void process(std::vector<std::deque<char> >&& vec_messages, bool stop = false) {
-        workers_.enqueue([stop](const pointer& this_ptr, std::vector<std::deque<char> > vec_messages) {
+        workers_.enqueue([stop](const std::weak_ptr<TCPConnection>& this_weak_ptr, std::vector<std::deque<char> > vec_messages) {
             for (auto& message: vec_messages) {
+                if (message.empty()) {
+                    continue;
+                }
+                auto this_ptr = this_weak_ptr.lock();
+                if (!this_ptr) {
+                    log_info("Interrupt calculation due to died connection");
+                    return;
+                }
                 std::string exp;
                 exp.append(message.begin(), message.begin() + message.size());
                 message.clear();
@@ -141,11 +159,7 @@ private:
             if (stop) {
                 return;
             }
-            this_ptr->socket_.async_read_some(boost::asio::buffer(this_ptr->buffer_),
-                                              boost::bind(&TCPConnection::handle_read, this_ptr,
-                                                          boost::asio::placeholders::error,
-                                                          boost::asio::placeholders::bytes_transferred));
-        }, shared_from_this(), std::move(vec_messages));
+        }, std::weak_ptr<TCPConnection>(shared_from_this()), std::move(vec_messages));
     }
 
     boost::asio::ip::tcp::socket socket_;
