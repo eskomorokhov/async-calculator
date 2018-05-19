@@ -2,54 +2,17 @@
 
 #include <malloc.h>
 
-#include <memory>
 #include <deque>
+#include <memory>
 
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/array.hpp>
 
+#include "log.hpp"
 #include "thread_pool.hpp"
 
-void log_debug() {
-//    std::cerr << "\n";
-}
-
-template <typename TArg, typename... Args> 
-void log_debug(TArg /*arg*/, Args&&... args) {
-//    std::cerr << arg;
-    log_debug(std::forward<Args>(args)...);
-}
-
-void log_info() {
-    std::cerr << "\n";
-}
-
-template <typename TArg, typename... Args> 
-void log_info(TArg arg, Args&&... args) {
-    std::cerr << arg;
-    log_info(std::forward<Args>(args)...);
-}
-
-
-template <class TProcessor>
-class StreamsProcessor {
-public:
-    StreamsProcessor(TProcessor&& processor) : processor_(std::move(processor)) {
-
-    }
-    // streams to extend upto multiline evalutations
-    void process(std::istream& is, std::ostream& os) {
-        std::string line;
-        while(getline(is, line)) {
-            os << processor_.process(line) << std::endl;
-        }
-    }
-private:
-    TProcessor processor_;
-};
-
-
+namespace IO {
 
 class TCPConnection: public std::enable_shared_from_this<TCPConnection>
 {
@@ -227,3 +190,4 @@ private:
     Processor processor_;
 };
 
+}   //  namespace IO

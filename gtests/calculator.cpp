@@ -4,11 +4,12 @@
 
 #include <sstream>
 
+using namespace Application;
+
 TEST(Calculator, empty) {
     Calculator c;
     EXPECT_THROW(c.process(""), std::runtime_error);
 }
-
 
 TEST(Calculator, literal) {
     Calculator c;
@@ -98,15 +99,18 @@ TEST(Calculator, priority) {
     EXPECT_EQ(c.process("4+2-2"), "4");
 }
 
-TEST(Calculator, parentheses) {
+TEST(Calculator, parenthesis) {
     Calculator c;
     EXPECT_EQ(c.process("1 - 3 - 2"), "-4");
     EXPECT_EQ(c.process("1 - (3 - 2)"), "0");
+    EXPECT_EQ(c.process("1 - (3 - 2)+(3- -2)"), "5");
     EXPECT_EQ(c.process("2 * 3 + 2"), "8");
     EXPECT_EQ(c.process("2 * (3 + 2)"), "10");
     EXPECT_EQ(c.process("2 * (3 + 2*5)"), "26");
     EXPECT_EQ(c.process("2 * (3 + 2*5+2)"), "30");
     EXPECT_EQ(c.process("2 * (3 + 2*(5+2))"), "34");
+    EXPECT_EQ(c.process("- (1)"), "-1");
+    EXPECT_EQ(c.process("- (1+1)"), "-2");
 }
 
 TEST(Calculator, long_expressions) {
@@ -122,4 +126,41 @@ TEST(Calculator, random_evaluations) {
 TEST(Calculator, overflowing) {
     Calculator c;
     EXPECT_EQ(c.process("1"), "1");
+}
+
+TEST(Calculator, incorrect_input) {
+    Calculator c;
+    EXPECT_THROW(c.process("-"), std::runtime_error);
+    EXPECT_THROW(c.process("-*"), std::runtime_error);
+    EXPECT_THROW(c.process("-/"), std::runtime_error);
+    EXPECT_THROW(c.process("-+"), std::runtime_error);
+    EXPECT_THROW(c.process("-("), std::runtime_error);
+    EXPECT_THROW(c.process("-()"), std::runtime_error);
+    EXPECT_THROW(c.process(")"), std::runtime_error);
+    EXPECT_THROW(c.process("1("), std::runtime_error);
+    EXPECT_THROW(c.process("*1"), std::runtime_error);
+    EXPECT_THROW(c.process("/1"), std::runtime_error);
+    EXPECT_THROW(c.process("+1"), std::runtime_error);
+    EXPECT_THROW(c.process("*"), std::runtime_error);
+    EXPECT_THROW(c.process("1-"), std::runtime_error);
+    EXPECT_THROW(c.process("1+"), std::runtime_error);
+    EXPECT_THROW(c.process("1*"), std::runtime_error);
+    EXPECT_THROW(c.process("1/"), std::runtime_error);
+    EXPECT_THROW(c.process("-1-"), std::runtime_error);
+    EXPECT_THROW(c.process("*1-"), std::runtime_error);
+    EXPECT_THROW(c.process("(1-2-1"), std::runtime_error);
+    EXPECT_THROW(c.process("(1-(2-1"), std::runtime_error);
+    EXPECT_THROW(c.process("((1)"), std::runtime_error);
+    EXPECT_THROW(c.process("()1"), std::runtime_error);
+    EXPECT_THROW(c.process("1(2)"), std::runtime_error);
+    EXPECT_THROW(c.process("(2)1"), std::runtime_error);
+    EXPECT_THROW(c.process("(2)1"), std::runtime_error);
+    EXPECT_THROW(c.process("(2)1"), std::runtime_error);
+    EXPECT_THROW(c.process("(2)-"), std::runtime_error);
+}
+
+TEST(Calculator, custom_cases) {
+    Calculator c;
+    EXPECT_THROW(c.process("77*10+1*3)"), std::runtime_error);
+    EXPECT_THROW(c.process("77*10+1*3)+2"), std::runtime_error);  
 }

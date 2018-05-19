@@ -4,6 +4,10 @@
 
 #include "shunting_yard_calc.hpp"
 
+
+namespace Application
+{
+
 template<typename TUnit=signed long>
 class TCalculator {
 public:
@@ -12,12 +16,15 @@ public:
 
 template<typename TUnit>
 std::string TCalculator<TUnit>::process(const std::string& line) const {
-    std::string out;
-    if (shunting_yard_calc(line, out)) {
-        return out;
+    std::string outcome;
+    std::string error;
+    if (shunting_yard_calc(line, outcome, error)) {
+        return outcome;
     } else {
-        throw std::runtime_error("Cannot parse string " + line);
+        throw std::runtime_error("parse error:" + error);
     }
 }
 
 using Calculator=TCalculator<>;
+
+}	// namespace Application

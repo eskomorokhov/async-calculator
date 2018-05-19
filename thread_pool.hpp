@@ -1,15 +1,18 @@
-#include <vector>
-#include <queue>
-#include <memory>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <future>
-#include <functional>
-#include <stdexcept>
 #include <atomic>
+#include <condition_variable>
+#include <functional>
+#include <future>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <stdexcept>
+#include <thread>
+#include <vector>
 
 #include <boost/optional.hpp>
+
+namespace IO
+{
 
 template <typename Object>
 class ThreadSafeQueue{
@@ -97,3 +100,5 @@ ThreadPool::~ThreadPool() {
         worker.join();
     }
 }
+
+}   // namespace IO

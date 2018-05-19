@@ -1,79 +1,119 @@
 #pragma once
+#include <iterator>
 #include <list>
 #include <map>
 #include <stack>
-#include <vector>
 #include <string>
+#include <vector>
+#include <iostream>
 
+//! Infix expression evaluation 
+//! Shunting yard algorithm https://en.wikipedia.org/wiki/Shunting-yard_algorithm
+//! \param expression [in] string with expression for evaluation
+//! \param outcome [out] string with result if success, undefined else
+//! \param error [out] string with error description if fail, undefined else
 template<typename TUnit=long>
-inline bool shunting_yard_calc(const std::string& expression, std::string& outcome) {
-    struct Item{
+inline bool shunting_yard_calc(
+            const std::string& expression,
+            std::string& outcome,
+            std::string& error
+    ) {
+    // Item represents tokens of expression in internal representation
+    // Contains source literals and operations, intermediate results 
+    struct Item {
         bool is_literal;
         union {
             TUnit literal;
-            char op;
+            char operation_character;
         } value;
     };
 
-    //std::cerr<< "exp:" << expression << "\n";
+    std::cerr<< "exp:" << expression << "\n";
     static const std::map<char, int> operators_precedence = {{'*', 10}, {'/', 10}, {'+', 8}, {'-', 9}, {'n',11}, {'(',1}, {')',1}};
-    std::deque<Item> ops;
-    std::deque<Item> rpn;
-    const char* p = expression.c_str();
-    const char* p_end = expression.c_str() + expression.size();
-    bool prev_op = true;
-    for(; p != p_end; ++p) {
-        if (std::isdigit(*p) ) {
+    std::deque<Item> ops;   //! Pending queue of operations, first step of shunting-yard algorithm
+    std::deque<Item> rpn;   //! Reverse polish notation https://en.wikipedia.org/wiki/Polish_notation 
+    const char* current_character = expression.c_str();
+    const char* end_character = expression.c_str() + expression.size();
+    bool previous_token_is_operation = true;
+    unsigned parenthesis_depth = 0;
+    for(; current_character != end_character; ++current_character) {
+        if (std::isdigit(*current_character) ) {
             int v = 0;
             do {
                 v *=10;
-                v += (*p) -'0';
-                ++p;
-            } while (std::isdigit(*p));
-            --p;
+                v += (*current_character) - '0';
+                ++current_character;
+            } while (std::isdigit(*current_character));
+            --current_character;
+            if (!previous_token_is_operation) {
+                error = "an unexpected literal, missed an operation before " + std::to_string(v);
+                return false;
+            }
             Item literal;
             literal.is_literal = true;
             literal.value.literal = v;
             rpn.push_back(literal);
-            prev_op = false;
-        } else if (std::isspace(*p)){
+            previous_token_is_operation = false;
+        } else if (std::isspace(*current_character)){
             //skip
-        } else if (*p == '(') {
+        } else if (*current_character == '(') {
+            if (!previous_token_is_operation) {
+                error = "starts parenthesis without a conjuntion operation";
+                return false;
+            }
             Item op_item;
             op_item.is_literal = false;
-            op_item.value.op = *p;
+            op_item.value.operation_character = *current_character;
             ops.push_back(op_item);
-            prev_op = false;
-        } else if (*p == ')') {
-            while (!ops.empty() && ops.back().value.op != '(') {
+            previous_token_is_operation = true;
+            parenthesis_depth++;
+        } else if (*current_character == ')') {
+            if (previous_token_is_operation) {
+                error = "an unexpected parentheses";
+                return false;
+            }
+            while (!ops.empty() && ops.back().value.operation_character != '(') {
                 rpn.push_back(ops.back());
                 ops.pop_back();
             }
-            if (!ops.empty() && ops.back().value.op == '(') {
+            if (!ops.empty() && ops.back().value.operation_character == '(') {
                 ops.pop_back();
+            } else {
+                error = "missing left parentheses";
+                return false;
             }
+            previous_token_is_operation = false;
+            parenthesis_depth--;
         } else {
-            auto cmd = *p;
-            if (prev_op && cmd == '-') {
+            auto cmd = *current_character;
+            if (previous_token_is_operation && cmd == '-') {
                 cmd = 'n';
             }
-
+            if (previous_token_is_operation && cmd != 'n') {
+                error = "an unexpected operation, missing literal or parentheses";
+                return false;
+            }
             {
-                if (ops.empty() || operators_precedence.at(ops.back().value.op) < operators_precedence.at(cmd)) {
-                    Item op;
-                    op.is_literal = false;
-                    op.value.op = cmd;
-                    ops.push_back(op);
-                    prev_op = true;
+                if (ops.empty() || operators_precedence.at(ops.back().value.operation_character) < 
+                        operators_precedence.at(cmd)) {
+                    Item operation_character;
+                    operation_character.is_literal = false;
+                    operation_character.value.operation_character = cmd;
+                    ops.push_back(operation_character);
+                    previous_token_is_operation = true;
                 } else {
                     rpn.push_back(ops.back());
                     ops.pop_back();
-                    --p;
+                    --current_character;
                 }
             }
             //std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
             //std::cerr << "->";
         }
+    }
+    if (parenthesis_depth > 0) {
+        error = "missing right parentheses";
+        return false;
     }
     if (ops.empty() && rpn.empty()) {
         return false;
@@ -82,14 +122,16 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
         rpn.push_back(ops.back());
         ops.pop_back();
     }
-    //std::copy(rpn.begin(), rpn.end(), std::ostream_iterator<std::string>(std::cerr));
+    //for (const auto&item: rpn) {
+    //    (item.is_literal ? (std::cerr <<item.value.literal) : (std::cerr << item.value.operation_character)) << " ";
+    //}
     //std::cerr << ":";
 
     for (auto it = rpn.begin()++; it != rpn.end(); ++it) {
-        if (it->is_literal) {
-        } else {
-            if (it->value.op == 'n') {
+        if (!it->is_literal) {
+            if (it->value.operation_character == 'n') {
                 if (std::distance(rpn.begin(), it) < 1) {
+                    error = "missed an operand for unary operation -";
                     return false;
                 }
                 auto it_literal = it;
@@ -102,6 +144,7 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
                 rpn.erase(it_literal, it);
             } else {
                 if (std::distance(rpn.begin(), it) < 2) {
+                    error = "missed operand(s) for operation " + std::string(1, it->value.operation_character);
                     return false;
                 }
                 auto it_literal = it;
@@ -112,24 +155,24 @@ inline bool shunting_yard_calc(const std::string& expression, std::string& outco
                 if (!a.is_literal || !b.is_literal) {
                     return false;
                 }
-                const auto& a_val = a.value.literal;
-                const auto& b_val = b.value.literal;
+                const auto& left_operand = a.value.literal;
+                const auto& right_operand = b.value.literal;
                 TUnit res = 0;
-                switch (it->value.op) {
+                switch (it->value.operation_character) {
                     case '+':
-                        res = a_val + b_val;
+                        res = left_operand + right_operand;
                         break;
                     case '-':
-                        res = a_val - b_val;
+                        res = left_operand - right_operand;
                         break;
                     case '*':
-                        res = a_val * b_val;
+                        res = left_operand * right_operand;
                         break;
                     case '/':
-                        if (b_val == 0) {
+                        if (right_operand == 0) {
                             return false;
                         }
-                        res = a_val / b_val;
+                        res = left_operand / right_operand;
                         break;
                 };
                 *it = a;
